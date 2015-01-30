@@ -2,6 +2,11 @@
 _ = require('underscore-plus')
 TestProvider = require('./lib/test-provider')
 
+indexOfWord = (suggestionList, word) ->
+  for suggestion, i in suggestionList
+    return i if suggestion.word is word
+  -1
+
 describe 'Autocomplete', ->
   [completionDelay, editorView, editor, autocompleteManager] = []
 
@@ -27,13 +32,20 @@ describe 'Autocomplete', ->
         editor = e
 
       # Activate the package
-      waitsForPromise -> atom.packages.activatePackage('autocomplete-plus').then (a) ->
-        autocompleteManager = a.mainModule.autocompleteManager
+      waitsForPromise ->
+        atom.packages.activatePackage("language-javascript").then ->
+          atom.packages.activatePackage("autocomplete-plus").then (a) ->
+            autocompleteManager = a.mainModule.autocompleteManager
 
       runs ->
+        advanceClock 1
         editorView = atom.views.getView(editor)
 
-    it 'adds words to the wordlist after they have been written', ->
+    it "runs a completion ", ->
+      provider = autocompleteManager.providerManager.fuzzyProvider
+      expect(indexOfWord(provider.wordList, 'quicksort')).not.toEqual(-1)
+
+    it "adds words to the wordlist after they have been written", ->
       provider = autocompleteManager.providerManager.fuzzyProvider
 
       expect(provider.wordList.indexOf('somethingNew')).toEqual(-1)
